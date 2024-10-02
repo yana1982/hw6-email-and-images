@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 import { env } from '../utils/env.js';
-import {
-  PORT,
-  MONGODB_USER,
-  MONGODB_PASSWORD,
-  MONGODB_URL,
-  MONGODB_DB,
-} from '../utils/env.js';
+// import {
+//   PORT,
+//   MONGODB_USER,
+//   MONGODB_PASSWORD,
+//   MONGODB_URL,
+//   MONGODB_DB,
+// } from '../utils/env.js';
 
 export const initMongoDB = async () => {
   try {
