@@ -19,5 +19,3 @@ const MONGODB_URL = env('MONGODB_URL');
 const MONGODB_DB = env('MONGODB_DB');
 
 export { PORT, MONGODB_USER, MONGODB_PASSWORD, MONGODB_URL, MONGODB_DB };
-
-// mongodb+srv://yanaushakova1982:<db_password>@yana.nkyxw.mongodb.net/?retryWrites=true&w=majority&appName=Yana
