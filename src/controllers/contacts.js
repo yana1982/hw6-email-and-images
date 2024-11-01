@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import {
   getAllContacts,
   getContactById,
@@ -9,6 +11,8 @@ import createHttpError from 'http-errors';
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
 import { saveFileToUploadDir } from '../utils/saveFileToUploadDir.js';
+import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
+import { env } from '../utils/env.js';
 
 export const getContactsController = async (req, res) => {
   const userId = req.user._id;
@@ -49,6 +53,22 @@ export const getContactByIdController = async (req, res) => {
 export const createContactController = async (req, res) => {
   const userId = req.user._id;
 
+  let photo = null;
+  if (typeof req.file !== 'undefined') {
+    if (process.env.ENABLE_CLOUDINARY === 'true') {
+      const result = await saveFileToCloudinary(req.file.path);
+      await fs.unlink(req.file.path);
+
+      photo = result.secure_url;
+    } else {
+      await fs.rename(
+        req.file.path,
+        path.resolve('src', 'public/avatars', req.file.filename),
+      );
+
+      photo = `http://localhost:3000/photos/${req.file.filename}`;
+    }
+  }
   const payload = {
     ...req.body,
     userId,
@@ -62,18 +82,25 @@ export const createContactController = async (req, res) => {
     data: contact,
   });
 };
+
 export const patchContactController = async (req, res, next) => {
   const { contactId } = req.params;
+  const userId = req.user._id;
   const photo = req.file;
 
   let photoUrl;
 
   if (photo) {
-    photoUrl = await saveFileToUploadDir(photo);
+    if (env('ENABLE_CLOUDINARY') === 'true') {
+      photoUrl = await saveFileToCloudinary(photo);
+    } else {
+      photoUrl = await saveFileToUploadDir(photo);
+    }
   }
 
   const result = await updateContact(contactId, {
     ...req.body,
+    userId: req.user._id,
     photo: photoUrl,
   });
   // const result = await updateContact(contactId, req.body, userId);
