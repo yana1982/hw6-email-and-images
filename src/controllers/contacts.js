@@ -52,21 +52,14 @@ export const getContactByIdController = async (req, res) => {
 
 export const createContactController = async (req, res) => {
   const userId = req.user._id;
+  const photo = req.file;
 
-  let photo = null;
+  let photoUrl;
   if (typeof req.file !== 'undefined') {
-    if (process.env.ENABLE_CLOUDINARY === 'true') {
-      const result = await saveFileToCloudinary(req.file.path);
-      await fs.unlink(req.file.path);
-
-      photo = result.secure_url;
+    if (env('ENABLE_CLOUDINARY') === 'true') {
+      photoUrl = await saveFileToCloudinary(photo);
     } else {
-      await fs.rename(
-        req.file.path,
-        path.resolve('src', 'public/avatars', req.file.filename),
-      );
-
-      photo = `http://localhost:3000/photos/${req.file.filename}`;
+      photoUrl = await saveFileToUploadDir(photo);
     }
   }
   const payload = {
@@ -103,7 +96,6 @@ export const patchContactController = async (req, res, next) => {
     userId: req.user._id,
     photo: photoUrl,
   });
-  // const result = await updateContact(contactId, req.body, userId);
 
   if (!result) {
     next(createHttpError(404, 'Contact not found'));
